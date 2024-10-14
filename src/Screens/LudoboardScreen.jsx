@@ -6,18 +6,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
-import Wrapper from '../Component/Wrapper';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import Wrapper from '../components/Wrapper';
 import MenuIcon from '../assets/images/menu.png';
-import StartGame from '../assets/images/start.png';
-import {deviceHeight, deviceWidth} from '../Constants/Scaling';
-import Dice from '../Component/Dice';
-import {Colors} from '../Constants/Colors';
-import Poket from '../Component/Poket';
-import VerticalPath from '../Component/Path/VerticalPath';
-import {Plot1Data, Plot2Data, Plot3Data, Plot4Data} from '../Helpers/PlotData';
-import HorizontalPath from '../Component/Path/HorizontalPath';
-import FourTriangles from '../Component/FourTriangles';
+import {deviceHeight, deviceWidth} from '../constants/Scaling';
+import Dice from '../components/Dice';
+import {Colors} from '../constants/Colors';
+import Pocket from '../components/Pocket';
+import {Plot1Data, Plot2Data, Plot3Data, Plot4Data} from '../helpers/PlotData';
+import VerticalPath from '../components/path/VerticalPath';
+import HorizontalPath from '../components/path/HorizontalPath';
+import FourTriangles from '../components/FourTriangles';
 import {useSelector} from 'react-redux';
 import {
   selectDiceTouch,
@@ -28,98 +27,118 @@ import {
 } from '../redux/reducers/gameSelectors';
 import {useIsFocused} from '@react-navigation/native';
 
+import SartGame from '../assets/images/start.png';
+import MenuModel from '../components/MenuModel';
+import {playSound} from '../helpers/SoundUtility';
+import WinModal from '../components/WinModal';
+
 const LudoboardScreen = () => {
   const player1 = useSelector(selectPlayer1);
   const player2 = useSelector(selectPlayer2);
   const player3 = useSelector(selectPlayer3);
   const player4 = useSelector(selectPlayer4);
+
   const isDiceTouch = useSelector(selectDiceTouch);
   const winner = useSelector(state => state.game.winner);
 
   const isFocused = useIsFocused();
-
   const [showStartImage, setShowStartImage] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const opacity = useRef(new Animated.Value(1)).current;
-
-  // useEffect(() => {
-  //   if (isFocused) {
-  //     setShowStartImage(true);
-  //     const blinkAnimation = Animated.loop(
-  //       Animated.sequence([
-  //         Animated.timing(opacity, {
-  //           toValue: 0,
-  //           duration: 500,
-  //           useNativeDriver: true,
-  //         }),
-  //         Animated.timing(opacity, {
-  //           toValue: 1,
-  //           duration: 500,
-  //           useNativeDriver: true,
-  //         }),
-  //       ]),
-  //     );
-  //     blinkAnimation.start();
-
-  //     const timeout = setTimeout(() => {
-  //       blinkAnimation.stop();
-  //       setShowStartImage(false);
-  //     }, 2500);
-  //     return () => {
-  //       blinkAnimation.stop();
-  //       clearTimeout(timeout);
-  //     };
-  //   }
-  // }, [isFocused]);
+  useEffect(()=>{
+      if(isFocused){
+          setShowStartImage(true);
+          const blinkAnimation=Animated.loop(
+              Animated.sequence([
+                  Animated.timing(opacity,{
+                      toValue:0,
+                      duration:500,
+                      useNativeDriver:true,
+                  }),
+                  Animated.timing(opacity,{
+                      toValue:1,
+                      duration:500,
+                      useNativeDriver:true,
+                  }),
+              ])
+          )
+          blinkAnimation.start()
+          const timeout=setTimeout(()=>{
+              blinkAnimation.stop();
+              setShowStartImage(false);
+          },2500)
+          return()=>{
+              blinkAnimation.stop()
+          }
+      }
+  },[isFocused])
+  const handleMenuPress = useCallback(() => {
+    playSound('ui');
+    setMenuVisible(true);
+  }, [menuVisible]);
 
   return (
     <Wrapper>
-      <TouchableOpacity style={{position: 'absolute', top: 60, left: 20}}>
-        <Image source={MenuIcon} style={{height: 30, width: 30}} />
+      <TouchableOpacity
+        onPress={handleMenuPress}
+        style={{position: 'absolute', top: 60, left: 20}}>
+        <Image source={MenuIcon} style={{width: 30, height: 30}} />
       </TouchableOpacity>
-      {/* Ludo Board */}
       <View style={styles.container}>
-        <View style={styles.flexRow} pointerEvents={isDiceTouch ? 'none' : 'auto'} >
+        <View
+          style={styles.flexRow}
+          pointerEvents={isDiceTouch ? 'none' : 'auto'}>
           <Dice color={Colors.green} player={2} data={player2} />
-          <Dice color={Colors.yellow} rotate player={3} data={player3} />
+          <Dice color={Colors.yellow} rotate data={player3} player={3} />
         </View>
         <View style={styles.ludoBoard}>
-          <View style={styles.plotontainer}>
-            <Poket color={Colors.green} player={2} data={player2} />
+          <View style={styles.plotContainer}>
+            <Pocket color={Colors.green} player={2} data={player2} />
             <VerticalPath cells={Plot2Data} color={Colors.yellow} />
-            <Poket color={Colors.yellow} player={3} data={player3} />
+            <Pocket color={Colors.yellow} player={3} data={player3} />
           </View>
-
-          <View style={styles.patchContainer}>
+          <View style={styles.pathContainer}>
             <HorizontalPath cells={Plot1Data} color={Colors.green} />
-            <FourTriangles />
+            <FourTriangles
+              player1={player1}
+              player2={player2}
+              player3={player3}
+              player4={player4}
+            />
             <HorizontalPath cells={Plot3Data} color={Colors.blue} />
           </View>
-
-          <View style={styles.plotontainer}>
-            <Poket color={Colors.red} player={1} data={player1} />
+          <View style={styles.plotContainer}>
+            <Pocket color={Colors.red} player={1} data={player1} />
             <VerticalPath cells={Plot4Data} color={Colors.red} />
-            <Poket color={Colors.blue} player={4} data={player4} />
+            <Pocket color={Colors.blue} player={4} data={player4} />
           </View>
         </View>
-
-        <View style={styles.flexRow} pointerEvents={isDiceTouch ? 'none' : 'auto'} >
+        <View
+          style={styles.flexRow}
+          pointerEvents={isDiceTouch ? 'none' : 'auto'}>
           <Dice color={Colors.red} player={1} data={player1} />
           <Dice color={Colors.blue} rotate player={4} data={player4} />
         </View>
       </View>
-
       {showStartImage && (
         <Animated.Image
-          source={StartGame}
+          source={SartGame}
           style={{
             width: deviceWidth * 0.5,
-            height: deviceHeight * 0.2,
+            height: deviceWidth * 0.2,
             position: 'absolute',
             opacity,
           }}
         />
       )}
+
+      {menuVisible && (
+        <MenuModel
+          onPressHide={() => setMenuVisible(false)}
+          visible={menuVisible}
+        />
+      )}
+      {winner != null && <WinModal winner={winner} />}
     </Wrapper>
   );
 };
@@ -128,10 +147,10 @@ export default LudoboardScreen;
 
 const styles = StyleSheet.create({
   container: {
+    alignSelf: 'center',
+    justifyContent: 'center',
     height: deviceHeight * 0.5,
     width: deviceWidth,
-    justifyContent: 'center',
-    alignSelf: 'center',
   },
   flexRow: {
     justifyContent: 'space-between',
@@ -140,19 +159,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   ludoBoard: {
-    height: '100%',
     width: '100%',
+    height: '100%',
     alignSelf: 'center',
     padding: 10,
+    //backgroundColor:"red"
   },
-  plotontainer: {
+  plotContainer: {
     width: '100%',
     height: '40%',
-    backgroundColor: '#ccc',
     justifyContent: 'space-between',
     flexDirection: 'row',
+    backgroundColor: '#ccc',
   },
-  patchContainer: {
+  pathContainer: {
     flexDirection: 'row',
     width: '100%',
     height: '20%',

@@ -4,34 +4,38 @@ import {
 } from '@react-navigation/native';
 
 export const navigationRef = createNavigationContainerRef();
-
-export async function navigate(routeName, params) {
+export async function navigate(routeName, parms) {
   navigationRef.isReady();
   if (navigationRef.isReady()) {
-    navigationRef.dispatch(CommonActions.navigate(routeName, params));
+    navigationRef.dispatch(CommonActions.navigate(routeName, parms));
   }
 }
-
 export async function resetAndNavigate(routeName) {
-  navigationRef.isReady();
+  //navigate.isReady();
   if (navigationRef.isReady()) {
-    CommonActions.reset({
-      index: 0,
-      routes: [{name: routeName}],
-    });
+    navigationRef.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{name: routeName}],
+      }),
+    );
   }
 }
-
 export async function goBack() {
-  navigationRef.isReady();
   if (navigationRef.isReady()) {
+    // Ensure navigationRef is ready
     navigationRef.dispatch(CommonActions.goBack());
+  } else {
+    console.warn('Navigation is not ready!');
+  }
+}
+export async function push(routeName, parms) {
+  navigate.isReady();
+  if (navigationRef.isReady()) {
+    navigationRef.dispatch(CommonActions.push(routeName, parms));
   }
 }
 
-export async function push(routeName, params) {
+export async function prepareNavigation() {
   navigationRef.isReady();
-  if (navigationRef.isReady()) {
-    navigationRef.dispatch(CommonActions.push(routeName, params));
-  }
 }

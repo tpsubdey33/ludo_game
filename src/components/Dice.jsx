@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {memo, useEffect, useRef, useState} from 'react';
-import LinearGradient from 'react-native-linear-gradient';
-import {BackdgroundImage} from '../Helpers/GetIcons';
+import React, {useEffect, useRef, useState} from 'react';
+import {LinearGradient} from 'react-native-linear-gradient';
+import {BackgroundImage} from '../helpers/GetIcons';
 import LottieView from 'lottie-react-native';
 import DiceRoll from '../assets/animation/diceroll.json';
 import Arrow from '../assets/images/arrow.png';
@@ -24,9 +24,8 @@ import {
   updateDiceNo,
   updatePlayerChance,
 } from '../redux/reducers/gameSlice';
-import { playSound } from '../Helpers/SoundUtility';
-
-const Dice = memo(({color, rotate, player, data}) => {
+import {playSound} from '../helpers/SoundUtility';
+const Dice = React.memo(({color, rotate, player, data}) => {
   const dispatch = useDispatch();
   const currentPlayerChance = useSelector(selectCurrentPlayerChance);
   const isDiceRolled = useSelector(selectDiceRolled);
@@ -34,13 +33,10 @@ const Dice = memo(({color, rotate, player, data}) => {
   const playerPieces = useSelector(
     state => state.game[`player${currentPlayerChance}`],
   );
-
-  const pileIcon = BackdgroundImage.GetImage(color);
-  const diceIcon = BackdgroundImage.GetImage(diceNo);
+  const pileIcon = BackgroundImage.GetImage(color);
+  const diceIcon = BackgroundImage.GetImage(diceNo);
   const arrowAnim = useRef(new Animated.Value(0)).current;
-
   const [diceRolling, setDiceRolling] = useState(false);
-
   useEffect(() => {
     const animateArrow = () => {
       Animated.loop(
@@ -62,11 +58,10 @@ const Dice = memo(({color, rotate, player, data}) => {
     };
     animateArrow();
   }, []);
-
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-
   const handleDicePress = async () => {
     const newDiceNo = Math.floor(Math.random() * 6) + 1;
+    // const newDiceNo=2;
     playSound('dice_roll');
     setDiceRolling(true);
     await delay(800);
@@ -74,8 +69,7 @@ const Dice = memo(({color, rotate, player, data}) => {
     setDiceRolling(false);
 
     const isAnyPieceAlive = data?.findIndex(i => i.pos != 0 && i.pos != 57);
-    const isAnyPieceLocked = data?.findIndex(i => i.pos === 0);
-
+    const isAnyPieceLocked = data?.findIndex(i => i.pos == 0);
     if (isAnyPieceAlive == -1) {
       if (newDiceNo == 6) {
         dispatch(enablePileSelection({playerNo: player}));
@@ -84,17 +78,17 @@ const Dice = memo(({color, rotate, player, data}) => {
         if (chancePlayer > 4) {
           chancePlayer = 1;
         }
-        await delay(600);
+        await delay(800);
         dispatch(updatePlayerChance({chancePlayer: chancePlayer}));
       }
     } else {
       const canMove = playerPieces.some(
-        pile => pile.trableCount + newDiceNo <= 57 && pile.pos != 0,
+        pile => pile.travelCount + newDiceNo <= 57 && pile.pos != 0,
       );
       if (
         (!canMove && newDiceNo == 6 && isAnyPieceLocked == -1) ||
         (!canMove && newDiceNo != 6 && isAnyPieceLocked != -1) ||
-        (!canMove && newDiceNo !=6 && isAnyPieceLocked == -1)
+        (!canMove && newDiceNo != 6 && isAnyPieceLocked == -1)
       ) {
         let chancePlayer = player + 1;
         if (chancePlayer > 4) {
@@ -104,13 +98,13 @@ const Dice = memo(({color, rotate, player, data}) => {
         dispatch(updatePlayerChance({chancePlayer: chancePlayer}));
         return;
       }
-      if(newDiceNo == 6){
+      if (newDiceNo == 6) {
         dispatch(enablePileSelection({playerNo: player}));
       }
-      dispatch(enableCellSelection({playerNo: player}))
+      dispatch(enableCellSelection({playerNo: player}));
+      return;
     }
   };
-
   return (
     <View style={[styles.flexRow, {transform: [{scaleX: rotate ? -1 : 1}]}]}>
       <View style={styles.border1}>
@@ -169,59 +163,59 @@ const Dice = memo(({color, rotate, player, data}) => {
 export default Dice;
 
 const styles = StyleSheet.create({
-  diceGradient: {
-    borderWidth: 3,
-    borderLeftWidth: 3,
-    borderColor: '#f0ce2c',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  diceContainer: {
-    backgroundColor: '#e8c0c1',
-    borderWidth: 1,
-    borderRadius: 5,
-    width: 55,
-    height: 55,
-    paddingHorizontal: 8,
-    padding: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rollingDice: {
-    height: 80,
-    width: 80,
-    zIndex: 99,
-    top: -25,
-    position: 'absolute',
-    left: 35,
-  },
-  dice: {
-    width: 45,
-    height: 45,
-  },
-  flexRow: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  border1: {
-    borderWidth: 3,
-    borderRightWidth: 0,
-    borderColor: '#f0ce2c',
-  },
-  border2: {
-    borderWidth: 3,
-    padding: 1,
-    backgroundColor: '#aac8ab',
-    borderRadius: 10,
-    borderLeftWidth: 3,
-    borderColor: '#aac8ab',
-  },
-  pileContainer: {
-    paddingHorizontal: 3,
-  },
-  pileIcon: {
-    width: 35,
-    height: 35,
-  },
-});
+    diceGradient: {
+      borderWidth: 3,
+      borderLeftWidth: 3,
+      borderColor: '#f0ce2c',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    diceContainer: {
+      backgroundColor: '#e8c0c1',
+      borderWidth: 1,
+      borderRadius: 5,
+      width: 55,
+      height: 55,
+      paddingHorizontal: 8,
+      padding: 4,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    rollingDice: {
+      height: 80,
+      width: 80,
+      zIndex: 99,
+      top: -25,
+      position: 'absolute',
+      left: 35,
+    },
+    dice: {
+      width: 45,
+      height: 45,
+    },
+    flexRow: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexDirection: 'row',
+    },
+    border1: {
+      borderWidth: 3,
+      borderRightWidth: 0,
+      borderColor: '#f0ce2c',
+    },
+    border2: {
+      borderWidth: 3,
+      padding: 1,
+      backgroundColor: '#aac8ab',
+      borderRadius: 10,
+      borderLeftWidth: 3,
+      borderColor: '#aac8ab',
+    },
+    pileContainer: {
+      paddingHorizontal: 3,
+    },
+    pileIcon: {
+      width: 35,
+      height: 35,
+    },
+  });
